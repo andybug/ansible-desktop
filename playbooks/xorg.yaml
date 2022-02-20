@@ -1,0 +1,15 @@
+- hosts: desktop
+  tasks:
+    - name: amdgpu Xorg conf
+      tags: [xorg, amdgpu]
+      become: true
+      ansible.builtin.copy:
+        dest: /etc/X11/xorg.conf.d/20-amdgpu.conf
+        mode: 0644
+        content: |
+          Section "Device"
+               Identifier "AMD"
+               Driver "amdgpu"
+               Option "VariableRefresh" "true"
+               Option "TearFree" "true"
+          EndSection
