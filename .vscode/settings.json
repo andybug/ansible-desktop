@@ -1,0 +1,13 @@
+{
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/ansible-community/schemas/main/f/ansible-playbook.json": "file:///home/andy/src/me/ansible-desktop/playbooks/boot.yaml"
+  },
+  "cSpell.words": [
+    "amdgpu",
+    "lineinfile",
+    "mkinitcpio",
+    "selectattr",
+    "ucode"
+  ],
+  "editor.formatOnSave": true
+}

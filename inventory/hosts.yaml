@@ -1,0 +1,6 @@
+desktop:
+  vars:
+    ansible_connection: local
+    ansible_python_interpreter: /usr/bin/python
+  hosts:
+    brvn.weirwd.net:

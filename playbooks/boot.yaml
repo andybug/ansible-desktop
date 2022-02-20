@@ -1,0 +1,70 @@
+- hosts: desktop
+  vars:
+    kernels:
+      - name: linux-zen
+        display: Linux Zen
+        default: true
+      - name: linux-lts
+        display: Linux LTS
+    root_partition_uuid: bd0ff369-f5ef-448f-aa96-b5ef7a7b07df
+  tasks:
+    - name: install kernels
+      tags: [linux, kernel]
+      become: true
+      community.general.pacman:
+        name: "{{ kernels | map(attribute='name')}}"
+
+    - name: install drivers and firmware
+      tags: [linux, drivers]
+      become: true
+      community.general.pacman:
+        name: "{{ packages }}"
+      vars:
+        packages:
+          - amd-ucode
+          - linux-firmware
+
+    - name: amdgpu early kernel mode setting
+      tags: [mkinitcpio, amdgpu]
+      become: true
+      ansible.builtin.lineinfile:
+        path: /etc/mkinitcpio.conf
+        regexp: "^MODULES="
+        line: MODULES=(amdgpu)
+
+    - name: mkinitcpio hooks
+      tags: [mkinitcpio]
+      become: true
+      ansible.builtin.lineinfile:
+        path: /etc/mkinitcpio.conf
+        regexp: "^HOOKS="
+        # cspell: disable-next-line
+        line: HOOKS=(base udev autodetect modconf block lvm2 filesystems keyboard fsck)
+
+    - name: systemd-boot boot loader config
+      tags: [systemd-boot]
+      become: true
+      vars:
+        default_kernel: "{{ kernels | selectattr('default', 'true') | map(attribute='name') | first }}"
+      ansible.builtin.copy:
+        dest: /boot/loader/loader.conf
+        content: |
+          default {{ default_kernel }}.conf
+          timeout 3
+          console-mode max
+          editor  no
+
+    - name: systemd-boot entries
+      tags: [systemd-boot]
+      become: true
+      loop: "{{ kernels }}"
+      ansible.builtin.copy:
+        dest: /boot/loader/entries/{{ item.name }}.conf
+        # cspell: disable
+        content: |
+          title   Arch {{ item.display }}
+          linux   /vmlinuz-{{ item.name }}
+          initrd  /amd-ucode.img
+          initrd  /initramfs-{{ item.name }}.img
+          options root="UUID={{ root_partition_uuid }}" rw mitigations=off amdgpu.lockup_timeout=1000 amdgpu.gpu_recovery=1 amdgpu.noretry=0
+        # cspell: enable
