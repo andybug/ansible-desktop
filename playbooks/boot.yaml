@@ -14,6 +14,12 @@
       community.general.pacman:
         name: "{{ kernels | map(attribute='name')}}"
 
+    - name: install kernel modules hook
+      tags: [linux, kernel, modules]
+      become: true
+      community.general.pacman:
+        name: kernel-modules-hook
+
     - name: install drivers and firmware
       tags: [linux, drivers]
       become: true
